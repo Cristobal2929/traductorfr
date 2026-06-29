@@ -1,17 +1,20 @@
 package com.fenix.traductorfr
 
-import android.os.Handler
-import android.os.Looper
-
 import android.Manifest
 import android.app.*
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.graphics.PixelFormat
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.provider.Settings
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
@@ -37,6 +40,7 @@ import com.fenix.traductorfr.databinding.ActivityMainBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -92,7 +96,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    inner class FloatingService : Service() {
+    // -------------------------------------------------------------------------
+    // Service implementation (must be a static-like class; declared inside the file)
+    // -------------------------------------------------------------------------
+    class FloatingService : Service() {
 
         private lateinit var windowManager: WindowManager
         private lateinit var floatingView: FrameLayout
@@ -112,6 +119,9 @@ class MainActivity : AppCompatActivity() {
         private var speechRecognizer: SpeechRecognizer? = null
         private val client = OkHttpClient()
         private val serviceScope = CoroutineScope(Dispatchers.IO + Job())
+
+        private val NOTIFICATION_CHANNEL_ID = "floating_service_channel"
+        private val NOTIFICATION_ID = 1
 
         override fun onBind(intent: Intent?): IBinder? = null
 
@@ -367,8 +377,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         private fun runOnUiThread(action: () -> Unit) {
-            val handler = android.os.Handler(Looper.getMainLooper())
-            handler.post { action() }
+            Handler(Looper.getMainLooper()).post { action() }
         }
 
         override fun onDestroy() {
