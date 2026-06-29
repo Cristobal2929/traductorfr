@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TraductorFR</string>
+    <string name="btn_activar">Activar burbuja flotante</string>
+    <string name="tv_instrucciones">Pulsa el botón para activar la burbuja traductora</string>
+</resources>
