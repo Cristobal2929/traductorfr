@@ -52,6 +52,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private val REQUEST_RECORD_AUDIO = 1001
+    private val REQUEST_OVERLAY = 1002
     private val NOTIFICATION_CHANNEL_ID = "floating_service_channel"
     private val NOTIFICATION_ID = 1
 
@@ -59,15 +60,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        // Overlay permission
-        if (!Settings.canDrawOverlays(this)) {
-            val intent = Intent(
-                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                Uri.parse("package:$packageName")
-            )
-            startActivity(intent)
-        }
 
         // Audio permission
         if (ContextCompat.checkSelfPermission(
@@ -83,7 +75,16 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btnActivar.setOnClickListener {
-            startFloatingService()
+            if (!Settings.canDrawOverlays(this)) {
+                // Request overlay permission
+                val intent = Intent(
+                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:$packageName")
+                )
+                startActivityForResult(intent, REQUEST_OVERLAY)
+            } else {
+                startFloatingService()
+            }
         }
     }
 
@@ -93,6 +94,21 @@ class MainActivity : AppCompatActivity() {
             startForegroundService(intent)
         } else {
             startService(intent)
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_OVERLAY) {
+            if (Settings.canDrawOverlays(this)) {
+                startFloatingService()
+            } else {
+                Toast.makeText(
+                    this,
+                    "Permiso de superposición denegado. No se puede iniciar la burbuja.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
         }
     }
 
